@@ -8,7 +8,11 @@ A comprehensive collection of 300 SQL questions organized by difficulty level wi
 sql/
 ├── README.md                           # This file
 ├── requirements.txt                    # Python dependencies
+├── .gitignore                          # Git ignore file
 ├── create_schema_and_data.sql         # Database schema and sample data
+├── create_questions_table.sql         # SQL questions table creation
+├── insert_medium_questions.sql        # Medium questions data insertion
+├── insert_hard_questions.sql          # Hard questions data insertion
 ├── sql_questions_v2/
 │   ├── easy_1-100.sql                 # Easy questions (1-100)
 │   ├── medium_101-200.sql             # Medium questions (101-200)
@@ -16,7 +20,14 @@ sql/
 └── sql_questions/                     # Original questions (archived)
     ├── 1-30.sql
     ├── 31-60.sql
-    └── ... (10 files total)
+    ├── 61-90.sql
+    ├── 91-120.sql
+    ├── 121-150.sql
+    ├── 151-180.sql
+    ├── 181-210.sql
+    ├── 211-240.sql
+    ├── 241-270.sql
+    └── 271-300.sql
 ```
 
 ## 🚀 Quick Start
@@ -27,28 +38,134 @@ sql/
 
 ### 1. Database Setup
 
-```bash
-# Connect to PostgreSQL
-psql -U postgres
+#### Step 1: Install PostgreSQL
 
-# Create database
+**macOS (using Homebrew):**
+```bash
+brew install postgresql
+brew services start postgresql
+```
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+```
+
+**Windows:**
+- Download from [PostgreSQL official website](https://www.postgresql.org/download/windows/)
+- Run installer and follow setup wizard
+
+#### Step 2: Create Database and User
+
+```bash
+# Connect as postgres superuser
+sudo -u postgres psql
+
+# Or on Windows/macOS:
+psql -U postgres
+```
+
+```sql
+-- Create database
 CREATE DATABASE sql_practice;
 
-# Connect to the database
-\c sql_practice
+-- Create user (optional but recommended)
+CREATE USER sql_learner WITH PASSWORD 'your_password';
 
-# Run the schema script
+-- Grant privileges
+GRANT ALL PRIVILEGES ON DATABASE sql_practice TO sql_learner;
+
+-- Exit
+\q
+```
+
+#### Step 3: Load Schema and Data
+
+```bash
+# Connect to the database
+psql -U sql_learner -d sql_practice
+# Or: psql -U postgres -d sql_practice
+
+# Run the schema script (this will take 2-3 minutes)
 \i create_schema_and_data.sql
+
+# Verify installation
+SELECT COUNT(*) FROM employees; -- Should return ~1000
+SELECT COUNT(*) FROM sales;     -- Should return ~5000
+```
+
+#### Step 4: Test Connection
+
+```sql
+-- List all tables
+\dt
+
+-- Check sample data
+SELECT d.department_name, COUNT(e.id) as employee_count
+FROM departments d
+LEFT JOIN employees e ON d.department_id = e.department_id
+GROUP BY d.department_name
+ORDER BY employee_count DESC;
 ```
 
 ### 2. Python Environment (Optional)
 
+#### Step 1: Create Virtual Environment
+
 ```bash
-# Install dependencies
+# Create virtual environment
+python -m venv sql_env
+
+# Activate virtual environment
+# On macOS/Linux:
+source sql_env/bin/activate
+# On Windows:
+sql_env\Scripts\activate
+```
+
+#### Step 2: Install Dependencies
+
+```bash
+# Install all required packages
 pip install -r requirements.txt
 
-# Start Jupyter notebook for analysis
+# Verify installation
+python -c "import psycopg2, pandas, sqlalchemy; print('All packages installed successfully')"
+```
+
+#### Step 3: Test Database Connection
+
+```python
+# Create test_connection.py
+import psycopg2
+import pandas as pd
+
+try:
+    conn = psycopg2.connect(
+        host="localhost",
+        database="sql_practice",
+        user="sql_learner",  # or "postgres"
+        password="your_password"
+    )
+    
+    df = pd.read_sql("SELECT COUNT(*) as total_employees FROM employees", conn)
+    print(f"✅ Connection successful! Total employees: {df.iloc[0]['total_employees']}")
+    
+    conn.close()
+except Exception as e:
+    print(f"❌ Connection failed: {e}")
+```
+
+#### Step 4: Start Jupyter Notebook
+
+```bash
+# Start Jupyter notebook
 jupyter notebook
+
+# Or Jupyter Lab (more modern interface)
+jupyter lab
 ```
 
 ## 📊 Database Schema
