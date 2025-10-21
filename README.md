@@ -193,18 +193,6 @@ SELECT COUNT(*) FROM employees;
 -- Should return ~1000 rows
 ```
 
-## 📝 Contributing
-
-Feel free to:
-- Add new questions
-- Improve existing queries
-- Report bugs or issues
-- Suggest enhancements
-
-## 📄 License
-
-This project is for educational purposes. Feel free to use and modify for learning and teaching SQL.
-
 ## 🎓 Additional Resources
 
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
