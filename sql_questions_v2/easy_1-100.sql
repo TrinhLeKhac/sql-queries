@@ -1,0 +1,624 @@
+-- Easy SQL Questions 1-100
+-- Basic SELECT, WHERE, GROUP BY, JOINs, and simple aggregations
+
+-- 1. Find the second highest salary from the Employee table.
+SELECT MAX(salary) AS SecondHighestSalary
+FROM employees 
+WHERE salary < (SELECT MAX(salary) FROM employees);
+
+-- 2. Find duplicate records in a table.
+SELECT name, COUNT(*)
+FROM employees 
+GROUP BY name
+HAVING COUNT(*) > 1;
+
+-- 3. Retrieve employees who earn more than their manager.
+SELECT e.name AS Employee, e.salary, m.name AS Manager, m.salary AS ManagerSalary 
+FROM employees e
+JOIN employees m ON e.manager_id = m.id 
+WHERE e.salary > m.salary;
+
+-- 4. Count employees in each department having more than 5 employees.
+SELECT department_id, COUNT(*) AS num_employees
+FROM employees
+GROUP BY department_id 
+HAVING COUNT(*) > 5;
+
+-- 5. Find employees who joined in the last 6 months.
+SELECT *
+FROM employees
+WHERE hire_date > CURRENT_DATE - INTERVAL '6 months';
+
+-- 6. Get departments with no employees.
+SELECT d.department_name 
+FROM departments d
+LEFT JOIN employees e ON d.department_id = e.department_id
+WHERE e.id IS NULL;
+
+-- 7. Write a query to find the median salary.
+SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) AS median_salary
+FROM employees;
+
+-- 8. Find customers who have not made any purchase.
+SELECT c.customer_id, c.name 
+FROM customers c
+LEFT JOIN sales s ON c.customer_id = s.customer_id 
+WHERE s.sale_id IS NULL;
+
+-- 9. Write a query to perform a conditional aggregation (count males and females in each department)
+SELECT department_id,
+       COUNT(CASE WHEN gender = 'M' THEN 1 END) AS male_count,
+       COUNT(CASE WHEN gender = 'F' THEN 1 END) AS female_count
+FROM employees
+GROUP BY department_id;
+
+-- 10. Write a query to rank employees based on salary with ties handled properly.
+SELECT name, salary,
+       RANK() OVER (ORDER BY salary DESC) AS salary_rank 
+FROM employees;
+
+-- 11. Find employees who have the same salary as their manager.
+SELECT e.name AS Employee, e.salary, m.name AS Manager
+FROM employees e
+JOIN employees m ON e.manager_id = m.id 
+WHERE e.salary = m.salary;
+
+-- 12. Write a query to get the first and last purchase date for each customer.
+SELECT customer_id,
+       MIN(purchase_date) AS first_purchase, 
+       MAX(purchase_date) AS last_purchase
+FROM sales
+GROUP BY customer_id;
+
+-- 13. Write a query to find the number of employees in each job title.
+SELECT job_title, COUNT(*) AS num_employees
+FROM employees 
+GROUP BY job_title;
+
+-- 14. Find employees who don't have a department assigned.
+SELECT *
+FROM employees
+WHERE department_id IS NULL;
+
+-- 15. Write a query to find the difference in days between two dates in the same table.
+SELECT id, (end_date - start_date) AS days_difference
+FROM projects;
+
+-- 16. Find employees who have never made a sale.
+SELECT e.id, e.name
+FROM employees e
+LEFT JOIN sales s ON e.id = s.employee_id 
+WHERE s.sale_id IS NULL;
+
+-- 17. Find the average tenure of employees by department.
+SELECT department_id, 
+       AVG(DATE_PART('year', CURRENT_DATE - hire_date)) AS avg_tenure_years
+FROM employees
+GROUP BY department_id;
+
+-- 18. Find customers who purchased more than once in the same day.
+SELECT customer_id, purchase_date, COUNT(*) AS purchase_count
+FROM sales
+GROUP BY customer_id, purchase_date 
+HAVING COUNT(*) > 1;
+
+-- 19. List all departments and their employee counts, including departments with zero employees.
+SELECT d.department_id, d.department_name, COUNT(e.id) AS employee_count
+FROM departments d
+LEFT JOIN employees e ON d.department_id = e.department_id
+GROUP BY d.department_id, d.department_name;
+
+-- 20. Find the department with the lowest average salary.
+SELECT department_id, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY department_id 
+ORDER BY avg_salary
+LIMIT 1;
+
+-- 21. List employees whose names start and end with the same letter.
+SELECT *
+FROM employees
+WHERE LEFT(name, 1) = RIGHT(name, 1);
+
+-- 22. Find the first order date for each customer.
+SELECT customer_id, MIN(order_date) AS first_order_date
+FROM orders
+GROUP BY customer_id;
+
+-- 23. Find employees who have been promoted more than twice.
+SELECT employee_id, COUNT(*) AS promotion_count
+FROM promotions
+GROUP BY employee_id
+HAVING COUNT(*) > 2;
+
+-- 24. Find the total sales per customer including those with zero sales.
+SELECT c.customer_id, COALESCE(SUM(s.amount), 0) AS total_sales
+FROM customers c
+LEFT JOIN sales s ON c.customer_id = s.customer_id
+GROUP BY c.customer_id;
+
+-- 25. Find customers with no orders in the last year.
+SELECT customer_id 
+FROM customers c
+LEFT JOIN orders o ON c.customer_id = o.customer_id 
+    AND o.order_date >= CURRENT_DATE - INTERVAL '1 year'
+WHERE o.order_id IS NULL;
+
+-- 26. Find employees who earn more than the average salary of the entire company.
+SELECT *
+FROM employees
+WHERE salary > (SELECT AVG(salary) FROM employees);
+
+-- 27. Find the difference in days between the earliest and latest orders per customer.
+SELECT customer_id, MAX(order_date) - MIN(order_date) AS days_between
+FROM orders
+GROUP BY customer_id;
+
+-- 28. Find the department with the most employees.
+SELECT department_id, COUNT(*) AS employee_count
+FROM employees
+GROUP BY department_id
+ORDER BY employee_count DESC 
+LIMIT 1;
+
+-- 29. Find employees who were hired before their managers.
+SELECT e.name AS employee, m.name AS manager, 
+       e.hire_date, m.hire_date AS manager_hire_date 
+FROM employees e
+JOIN employees m ON e.manager_id = m.id 
+WHERE e.hire_date < m.hire_date;
+
+-- 30. List departments with average salary greater than the overall average.
+SELECT department_id, AVG(salary) AS avg_salary 
+FROM employees
+GROUP BY department_id
+HAVING AVG(salary) > (SELECT AVG(salary) FROM employees);
+
+-- 31. Find the most recent order date per customer.
+SELECT customer_id, MAX(order_date) AS last_order_date
+FROM orders
+GROUP BY customer_id;
+
+-- 32. List all employees and their manager names.
+SELECT e.name AS employee, m.name AS manager 
+FROM employees e
+LEFT JOIN employees m ON e.manager_id = m.id;
+
+-- 33. Find employees with the same salary as their manager.
+SELECT e.name AS employee, m.name AS manager, e.salary
+FROM employees e
+JOIN employees m ON e.manager_id = m.id
+WHERE e.salary = m.salary;
+
+-- 34. Get the number of employees hired each year.
+SELECT EXTRACT(YEAR FROM hire_date) AS hire_year, COUNT(*) AS count 
+FROM employees
+GROUP BY hire_year 
+ORDER BY hire_year;
+
+-- 35. Find the number of employees with the same job title per department.
+SELECT department_id, job_title, COUNT(*) AS employee_count
+FROM employees
+GROUP BY department_id, job_title;
+
+-- 36. Find employees with no manager assigned.
+SELECT *
+FROM employees
+WHERE manager_id IS NULL;
+
+-- 37. Calculate average salary by department and job title.
+SELECT department_id, job_title, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY department_id, job_title;
+
+-- 38. Find the median salary of employees.
+SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) AS median_salary
+FROM employees;
+
+-- 39. Find employees who have been promoted more than once.
+SELECT employee_id, COUNT(*) AS promotion_count
+FROM promotions 
+GROUP BY employee_id
+HAVING COUNT(*) > 1;
+
+-- 40. Calculate total sales by product category.
+SELECT p.category_id, SUM(s.amount) AS total_sales
+FROM sales s
+JOIN products p ON s.product_id = p.product_id 
+GROUP BY p.category_id;
+
+-- 41. Find the top 3 products by sales amount.
+SELECT product_id, SUM(amount) AS total_sales 
+FROM sales
+GROUP BY product_id
+ORDER BY total_sales DESC
+LIMIT 3;
+
+-- 42. Get employees who joined after their department was created.
+SELECT e.*
+FROM employees e
+JOIN departments d ON e.department_id = d.department_id
+WHERE e.hire_date > d.creation_date;
+
+-- 43. Find customers with no sales records.
+SELECT c.*
+FROM customers c
+LEFT JOIN sales s ON c.customer_id = s.customer_id 
+WHERE s.sale_id IS NULL;
+
+-- 44. Find the second highest salary in the company.
+SELECT MAX(salary) AS second_highest_salary 
+FROM employees
+WHERE salary < (SELECT MAX(salary) FROM employees);
+
+-- 45. Find the average number of orders per customer.
+SELECT AVG(order_count) AS avg_orders_per_customer 
+FROM (
+    SELECT customer_id, COUNT(*) AS order_count 
+    FROM orders
+    GROUP BY customer_id 
+) sub;
+
+-- 46. Find the total number of products sold each day.
+SELECT sale_date, SUM(quantity) AS total_quantity_sold
+FROM sales
+GROUP BY sale_date 
+ORDER BY sale_date;
+
+-- 47. Find customers with orders totaling more than $10,000.
+SELECT customer_id, SUM(amount) AS total_amount 
+FROM sales
+GROUP BY customer_id 
+HAVING SUM(amount) > 10000;
+
+-- 48. Find employees who have never received a bonus.
+SELECT e.*
+FROM employees e
+LEFT JOIN bonuses b ON e.id = b.employee_id
+WHERE b.bonus_id IS NULL;
+
+-- 49. Find the department with the lowest average salary.
+SELECT department_id, AVG(salary) AS avg_salary 
+FROM employees
+GROUP BY department_id 
+ORDER BY avg_salary
+LIMIT 1;
+
+-- 50. Get cumulative count of orders per customer over time.
+SELECT customer_id, order_date,
+       COUNT(*) OVER (PARTITION BY customer_id ORDER BY order_date) AS cumulative_orders 
+FROM orders;
+
+-- 51. Find customers who ordered products only from one category.
+SELECT customer_id
+FROM sales s
+JOIN products p ON s.product_id = p.product_id 
+GROUP BY customer_id
+HAVING COUNT(DISTINCT p.category_id) = 1;
+
+-- 52. Write a query to display employee names alongside their manager names, including those without managers.
+SELECT e.name AS employee_name, m.name AS manager_name
+FROM employees e
+LEFT JOIN employees m ON e.manager_id = m.id;
+
+-- 53. Find the top N customers by total sales amount.
+SELECT customer_id, SUM(amount) AS total_sales 
+FROM sales
+GROUP BY customer_id
+ORDER BY total_sales DESC
+LIMIT 5; -- Replace with N
+
+-- 54. Find the month with the highest sales in the current year.
+SELECT DATE_TRUNC('month', sale_date) AS month, SUM(amount) AS total_sales
+FROM sales
+WHERE EXTRACT(YEAR FROM sale_date) = EXTRACT(YEAR FROM CURRENT_DATE) 
+GROUP BY month
+ORDER BY total_sales DESC
+LIMIT 1;
+
+-- 55. Find the nth highest salary in a company (e.g., 5th highest).
+SELECT DISTINCT salary
+FROM employees
+ORDER BY salary DESC
+OFFSET 4 ROWS FETCH NEXT 1 ROW ONLY; -- For 5th highest (n-1)
+
+-- 56. Get the average salary of employees hired each year.
+SELECT EXTRACT(YEAR FROM hire_date) AS year, AVG(salary) AS avg_salary 
+FROM employees
+GROUP BY year 
+ORDER BY year;
+
+-- 57. Find employees with salaries higher than their department average.
+SELECT e.*
+FROM employees e
+JOIN (
+    SELECT department_id, AVG(salary) AS avg_salary 
+    FROM employees
+    GROUP BY department_id
+) d ON e.department_id = d.department_id
+WHERE e.salary > d.avg_salary;
+
+-- 58. Find the difference between each row's value and the previous row's value in sales.
+SELECT sale_date, amount,
+       amount - LAG(amount) OVER (ORDER BY sale_date) AS diff 
+FROM sales;
+
+-- 59. List employees who have been in the company for more than 10 years.
+SELECT *
+FROM employees
+WHERE CURRENT_DATE - hire_date > INTERVAL '10 years';
+
+-- 60. Find the department with the most promotions.
+SELECT e.department_id, COUNT(*) AS promotion_count
+FROM promotions p
+JOIN employees e ON p.employee_id = e.id 
+GROUP BY e.department_id
+ORDER BY promotion_count DESC
+LIMIT 1;
+
+-- 61. Find customers who ordered products from at least 3 different categories.
+SELECT customer_id
+FROM sales s
+JOIN products p ON s.product_id = p.product_id 
+GROUP BY customer_id
+HAVING COUNT(DISTINCT p.category_id) >= 3;
+
+-- 62. List all customers who have never ordered product X.
+SELECT customer_id 
+FROM customers
+WHERE customer_id NOT IN (
+    SELECT DISTINCT customer_id 
+    FROM sales
+    WHERE product_id = 'X'
+);
+
+-- 63. Calculate total revenue and number of orders per country.
+SELECT c.country, COUNT(o.order_id) AS order_count, SUM(o.amount) AS total_revenue 
+FROM customers c
+JOIN orders o ON c.customer_id = o.customer_id 
+GROUP BY c.country;
+
+-- 64. Find the employees who were hired on the same day as their managers.
+SELECT e.name AS employee, m.name AS manager, e.hire_date
+FROM employees e
+JOIN employees m ON e.manager_id = m.id 
+WHERE e.hire_date = m.hire_date;
+
+-- 65. Find the difference in days between the first and last order for each customer.
+SELECT customer_id, MAX(order_date) - MIN(order_date) AS days_between
+FROM orders
+GROUP BY customer_id;
+
+-- 66. Find employees who have the same salary as the average salary in their job title.
+SELECT e.*
+FROM employees e 
+JOIN (
+    SELECT job_title, AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY job_title
+) j ON e.job_title = j.job_title 
+WHERE e.salary = j.avg_salary;
+
+-- 67. Write a query to calculate the difference in salary between employees and their managers.
+SELECT e.name, m.name AS manager_name, 
+       e.salary, m.salary AS manager_salary, 
+       e.salary - m.salary AS salary_diff
+FROM employees e
+JOIN employees m ON e.manager_id = m.id;
+
+-- 68. List the departments with no employees.
+SELECT d.*
+FROM departments d
+LEFT JOIN employees e ON d.department_id = e.department_id 
+WHERE e.id IS NULL;
+
+-- 69. Find the employee with the maximum salary in each department.
+WITH dept_max AS (
+    SELECT department_id, MAX(salary) AS max_salary
+    FROM employees
+    GROUP BY department_id
+)
+SELECT e.*
+FROM employees e
+JOIN dept_max d ON e.department_id = d.department_id AND e.salary = d.max_salary;
+
+-- 70. Find the product that has been sold in the highest quantity in a single order.
+SELECT product_id, MAX(quantity) AS max_quantity_in_order 
+FROM sales
+GROUP BY product_id
+ORDER BY max_quantity_in_order DESC 
+LIMIT 1;
+
+-- 71. Find employees who joined before their department was created.
+SELECT e.*
+FROM employees e
+JOIN departments d ON e.department_id = d.department_id
+WHERE e.hire_date < d.creation_date;
+
+-- 72. Find customers with sales in at least 3 different years.
+SELECT customer_id 
+FROM sales
+GROUP BY customer_id
+HAVING COUNT(DISTINCT EXTRACT(YEAR FROM sale_date)) >= 3;
+
+-- 73. Find the average order amount per customer per year.
+SELECT customer_id, 
+       EXTRACT(YEAR FROM order_date) AS year, 
+       AVG(amount) AS avg_order_amount
+FROM orders
+GROUP BY customer_id, year;
+
+-- 74. Find the most recent promotion date per employee.
+SELECT employee_id, MAX(promotion_date) AS last_promotion_date
+FROM promotions 
+GROUP BY employee_id;
+
+-- 75. Find products never ordered.
+SELECT product_id
+FROM products
+WHERE product_id NOT IN (SELECT DISTINCT product_id FROM sales);
+
+-- 76. Find the month with the lowest sales in the past year.
+SELECT DATE_TRUNC('month', sale_date) AS month, SUM(amount) AS total_sales 
+FROM sales
+WHERE sale_date >= CURRENT_DATE - INTERVAL '1 year' 
+GROUP BY month
+ORDER BY total_sales
+LIMIT 1;
+
+-- 77. Calculate the number of employees hired each month in the last year.
+SELECT DATE_TRUNC('month', hire_date) AS month, COUNT(*) AS hires
+FROM employees
+WHERE hire_date >= CURRENT_DATE - INTERVAL '1 year'
+GROUP BY month 
+ORDER BY month;
+
+-- 78. Find the department with the highest number of projects.
+SELECT department_id, COUNT(*) AS project_count 
+FROM projects
+GROUP BY department_id
+ORDER BY project_count DESC
+LIMIT 1;
+
+-- 79. Find employees who do not have dependents.
+SELECT e.*
+FROM employees e
+LEFT JOIN dependents d ON e.id = d.employee_id
+WHERE d.dependent_id IS NULL;
+
+-- 80. Find customers with average order amount above $500.
+SELECT customer_id, AVG(amount) AS avg_order_amount
+FROM orders
+GROUP BY customer_id 
+HAVING AVG(amount) > 500;
+
+-- 81. Find orders where the total quantity exceeds 100 units.
+SELECT order_id, SUM(quantity) AS total_quantity 
+FROM order_items
+GROUP BY order_id
+HAVING SUM(quantity) > 100;
+
+-- 82. Find customers whose last order was placed more than 1 year ago.
+SELECT customer_id, MAX(order_date) AS last_order_date
+FROM orders
+GROUP BY customer_id
+HAVING MAX(order_date) < CURRENT_DATE - INTERVAL '1 year';
+
+-- 83. Find employees who have never been promoted.
+SELECT *
+FROM employees
+WHERE id NOT IN (SELECT DISTINCT employee_id FROM promotions);
+
+-- 84. Find customers with orders totaling more than $5000 in the last 6 months.
+SELECT customer_id, SUM(amount) AS total_amount 
+FROM orders
+WHERE order_date >= CURRENT_DATE - INTERVAL '6 months'
+GROUP BY customer_id 
+HAVING SUM(amount) > 5000;
+
+-- 85. Find the rank of employees based on salary within their department.
+SELECT *, 
+       RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) AS salary_rank 
+FROM employees;
+
+-- 86. Find the day with the highest number of new hires.
+SELECT hire_date, COUNT(*) AS hires
+FROM employees 
+GROUP BY hire_date
+ORDER BY hires DESC
+LIMIT 1;
+
+-- 87. Find customers who ordered the most products in 2023.
+SELECT customer_id, SUM(quantity) AS total_quantity
+FROM sales
+WHERE EXTRACT(YEAR FROM sale_date) = 2023 
+GROUP BY customer_id
+ORDER BY total_quantity DESC 
+LIMIT 1;
+
+-- 88. Find the average days taken to ship orders per shipping method.
+SELECT shipping_method, AVG(shipping_date - order_date) AS avg_shipping_days
+FROM orders
+GROUP BY shipping_method;
+
+-- 89. Find the total number of unique customers per product category.
+SELECT p.category_id, COUNT(DISTINCT s.customer_id) AS unique_customers
+FROM sales s
+JOIN products p ON s.product_id = p.product_id
+GROUP BY p.category_id;
+
+-- 90. Find employees with no projects assigned in the last 6 months.
+SELECT e.*
+FROM employees e
+LEFT JOIN project_assignments pa ON e.id = pa.employee_id 
+    AND pa.start_date >= CURRENT_DATE - INTERVAL '6 months' 
+WHERE pa.project_id IS NULL;
+
+-- 91. Find the product with the highest average rating.
+SELECT product_id, AVG(rating) AS avg_rating 
+FROM product_reviews
+GROUP BY product_id
+ORDER BY avg_rating DESC 
+LIMIT 1;
+
+-- 92. Find customers who have placed orders but never used a discount.
+SELECT DISTINCT customer_id 
+FROM orders
+WHERE discount_used = FALSE;
+
+-- 93. Find the total revenue generated per sales representative.
+SELECT sales_rep_id, SUM(amount) AS total_revenue 
+FROM sales
+GROUP BY sales_rep_id;
+
+-- 94. Find customers with no orders in the last year.
+SELECT customer_id
+FROM customers
+WHERE customer_id NOT IN (
+    SELECT DISTINCT customer_id 
+    FROM orders
+    WHERE order_date >= CURRENT_DATE - INTERVAL '1 year'
+);
+
+-- 95. Find products ordered only by customers from one country.
+SELECT product_id 
+FROM sales s
+JOIN customers c ON s.customer_id = c.customer_id
+GROUP BY product_id
+HAVING COUNT(DISTINCT c.country) = 1;
+
+-- 96. Find the total discount given in each month.
+SELECT DATE_TRUNC('month', order_date) AS month, 
+       SUM(discount_amount) AS total_discount 
+FROM orders
+GROUP BY month 
+ORDER BY month;
+
+-- 97. Find customers who have placed orders but never paid by credit card.
+SELECT DISTINCT customer_id
+FROM orders
+WHERE customer_id NOT IN (
+    SELECT DISTINCT customer_id 
+    FROM orders 
+    WHERE payment_method = 'Credit Card'
+);
+
+-- 98. Find the top 5 longest projects.
+SELECT project_id, start_date, end_date, 
+       end_date - start_date AS duration
+FROM projects
+ORDER BY duration DESC
+LIMIT 5;
+
+-- 99. Find employees who have not taken any leave in the last 6 months.
+SELECT e.id, e.name 
+FROM employees e
+LEFT JOIN leaves l ON e.id = l.employee_id 
+    AND l.leave_date >= CURRENT_DATE - INTERVAL '6 months'
+WHERE l.leave_id IS NULL;
+
+-- 100. Find the average order value per customer segment.
+SELECT segment, AVG(o.amount) AS avg_order_value 
+FROM customers c
+JOIN orders o ON c.customer_id = o.customer_id
+GROUP BY segment;
