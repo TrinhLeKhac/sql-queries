@@ -59,6 +59,7 @@ sudo systemctl start postgresql
 
 #### Step 2: Create Database and User
 
+**Option A: Using Command Line**
 ```bash
 # Connect as postgres superuser
 sudo -u postgres psql
@@ -81,8 +82,36 @@ GRANT ALL PRIVILEGES ON DATABASE sql_practice TO sql_learner;
 \q
 ```
 
+**Option B: Using pgAdmin (GUI Interface)**
+
+If you have PostgreSQL installed with pgAdmin:
+
+1. **Open pgAdmin** (usually available in Applications or Start Menu)
+2. **Connect to PostgreSQL Server**:
+   - Right-click "Servers" → "Create" → "Server"
+   - Name: `Local PostgreSQL`
+   - Host: `localhost`, Port: `5432`
+   - Username: `postgres`, Password: (your postgres password)
+
+3. **Create Database**:
+   - Right-click "Databases" → "Create" → "Database"
+   - Database name: `sql_practice`
+   - Click "Save"
+
+4. **Create User (Optional)**:
+   - Right-click "Login/Group Roles" → "Create" → "Login/Group Role"
+   - General tab: Name: `sql_learner`
+   - Definition tab: Password: `your_password`
+   - Privileges tab: Check "Can login?"
+   - Click "Save"
+
+5. **Grant Permissions**:
+   - Right-click `sql_practice` database → "Properties"
+   - Security tab → Add `sql_learner` with all privileges
+
 #### Step 3: Load Schema and Data
 
+**Option A: Using Command Line**
 ```bash
 # Connect to the database
 psql -U sql_learner -d sql_practice
@@ -95,6 +124,24 @@ psql -U sql_learner -d sql_practice
 SELECT COUNT(*) FROM employees; -- Should return ~1000
 SELECT COUNT(*) FROM sales;     -- Should return ~5000
 ```
+
+**Option B: Using pgAdmin (GUI Interface)**
+
+1. **Open Query Tool**:
+   - In pgAdmin, expand "Servers" → "Local PostgreSQL" → "Databases"
+   - Right-click `sql_practice` → "Query Tool"
+
+2. **Load and Execute Script**:
+   - Click "Open File" button (folder icon)
+   - Navigate to and select `create_schema_and_data.sql`
+   - Click "Execute" button (play icon) - this will take 2-3 minutes
+   - Wait for "Query returned successfully" message
+
+3. **Verify Installation**:
+   ```sql
+   SELECT COUNT(*) FROM employees; -- Should return ~1000
+   SELECT COUNT(*) FROM sales;     -- Should return ~5000
+   ```
 
 #### Step 4: Test Connection
 
