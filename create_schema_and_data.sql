@@ -653,9 +653,7 @@ CREATE INDEX idx_user_logins_user ON user_logins(user_id);
 CREATE INDEX idx_user_logins_date ON user_logins(login_date);
 
 -- Add some statistics
-ANALYZE;,
-    booking_amount DECIMAL(10,2) DEFAULT 100 + (RANDOM() * 900)
-);
+ANALYZE;
 
 CREATE TABLE user_logins (
     login_id SERIAL PRIMARY KEY,
