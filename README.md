@@ -10,7 +10,7 @@ sql/
 ├── requirements.txt                    # Python dependencies
 ├── .gitignore                          # Git ignore file
 ├── create_schema_and_data.sql         # Database schema and sample data
-├── create_questions_table.sql         # SQL questions table creation
+├── insert_easy_questions.sql         # SQL questions table creation
 ├── insert_medium_questions.sql        # Medium questions data insertion
 ├── insert_hard_questions.sql          # Hard questions data insertion
 ├── sql_questions_v2/

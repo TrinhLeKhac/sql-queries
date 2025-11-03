@@ -36,8 +36,27 @@ LEFT JOIN employees e ON d.department_id = e.department_id
 WHERE e.id IS NULL;
 
 -- 7. Write a query to find the median salary.
+-- Solution 1
 SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) AS median_salary
 FROM employees;
+
+-- Solution 2
+WITH total AS (
+	SELECT COUNT(*) AS n FROM public.employees
+),
+emp_with_rnb AS (
+	SELECT salary, ROW_NUMBER() OVER (ORDER BY salary) AS rnb
+	FROM public.employees
+),
+emp_with_rnb_and_total AS (
+	SELECT e.*, t.n FROM emp_with_rnb e
+	JOIN total t ON TRUE
+)
+SELECT AVG(salary) AS median_salary FROM emp_with_rnb_and_total
+WHERE rnb IN (
+	CASE WHEN n % 2 = 0 THEN n/2 ELSE (n+1)/2 END,
+  	CASE WHEN n % 2 = 0 THEN n/2 + 1 ELSE (n+1)/2 END
+);
 
 -- 8. Find customers who have not made any purchase.
 SELECT c.customer_id, c.name 
@@ -47,8 +66,8 @@ WHERE s.sale_id IS NULL;
 
 -- 9. Write a query to perform a conditional aggregation (count males and females in each department)
 SELECT department_id,
-       COUNT(CASE WHEN gender = 'M' THEN 1 END) AS male_count,
-       COUNT(CASE WHEN gender = 'F' THEN 1 END) AS female_count
+       SUM(CASE WHEN gender = 'M' THEN 1 ELSE 0 END) AS male_count,
+       SUM(CASE WHEN gender = 'F' THEN 1 ELSE 0 END) AS female_count
 FROM employees
 GROUP BY department_id;
 
@@ -138,10 +157,21 @@ LEFT JOIN sales s ON c.customer_id = s.customer_id
 GROUP BY c.customer_id;
 
 -- 25. Find customers with no orders in the last year.
+-- Solution 1
 SELECT customer_id 
 FROM customers c
 LEFT JOIN orders o ON c.customer_id = o.customer_id 
     AND o.order_date >= CURRENT_DATE - INTERVAL '1 year'
+WHERE o.order_id IS NULL;
+
+-- Solution 2
+WITH order_last_year AS (
+	SELECT * FROM orders WHERE order_date > CURRENT_DATE - INTERVAL '1 year'
+)
+SELECT COUNT (DISTINCT c.customer_id)
+FROM customers c
+LEFT JOIN order_last_year o
+ON c.customer_id = o.customer_id
 WHERE o.order_id IS NULL;
 
 -- 26. Find employees who earn more than the average salary of the entire company.
@@ -193,7 +223,7 @@ WHERE e.salary = m.salary;
 -- 34. Get the number of employees hired each year.
 SELECT EXTRACT(YEAR FROM hire_date) AS hire_year, COUNT(*) AS count 
 FROM employees
-GROUP BY hire_year 
+GROUP BY EXTRACT(YEAR FROM hire_date) -- Postgres allows GROUP BY alias (hire year), but HAVING doesn't allow
 ORDER BY hire_year;
 
 -- 35. Find the number of employees with the same job title per department.
