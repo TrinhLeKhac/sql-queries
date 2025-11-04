@@ -443,6 +443,7 @@ LEFT JOIN employees e ON d.department_id = e.department_id
 WHERE e.id IS NULL;
 
 -- 69. Find the employee with the maximum salary in each department.
+-- Solution 1
 WITH dept_max AS (
     SELECT department_id, MAX(salary) AS max_salary
     FROM employees
@@ -451,6 +452,11 @@ WITH dept_max AS (
 SELECT e.*
 FROM employees e
 JOIN dept_max d ON e.department_id = d.department_id AND e.salary = d.max_salary;
+
+-- Solution 2
+SELECT * FROM (
+	SELECT *, MAX(salary) OVER (PARTITION BY department_id) AS max_salary FROM employees) sub
+WHERE salary = max_salary;
 
 -- 70. Find the product that has been sold in the highest quantity in a single order.
 SELECT product_id, MAX(quantity) AS max_quantity_in_order 
