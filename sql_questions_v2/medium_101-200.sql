@@ -7,6 +7,7 @@ SELECT name, department_id, salary,
 FROM employees;
 
 -- 102. Find the longest consecutive streak of daily logins for each user.
+-- Solution 1
 WITH login_dates AS (
     SELECT user_id, login_date,
            login_date - INTERVAL (ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date)) DAY AS grp
@@ -18,6 +19,21 @@ SELECT user_id, COUNT(*) AS streak_length,
 FROM login_dates 
 GROUP BY user_id, grp
 ORDER BY streak_length DESC;
+
+-- Solution 2
+WITH cte_1 AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS rnb
+    FROM user_logins
+),
+cte_2 AS (
+	SELECT user_id, (login_date - rnb * INTERVAL '1 day')::date AS delta_day, COUNT(*) AS consecutive_cnt FROM cte_1
+	GROUP BY user_id, delta_day
+	ORDER BY user_id, delta_day
+)
+SELECT user_id, MAX(consecutive_cnt) AS max_consecutive_cnt
+FROM cte_2
+GROUP BY user_id
+ORDER BY user_id;
 
 -- 103. Calculate cumulative distribution (CDF) of salaries.
 SELECT name, salary,
@@ -80,6 +96,20 @@ FROM employees
 GROUP BY department_id;
 
 -- 112. Find customers who made purchases in every category available.
+--Solution 1
+WITH cnt AS (
+	SELECT COUNT(DISTINCT category_id) AS n_cate FROM sales
+),
+agg_cte AS (
+	SELECT customer_id, COUNT(DISTINCT category_id) AS n_distinct_cate
+	FROM sales GROUP BY customer_id
+),
+total_cte AS (
+	SELECT a.*, cnt.* FROM agg_cte a JOIN cnt ON TRUE
+)
+SELECT * FROM total_cte WHERE n_distinct_cate = n_cate;
+
+-- Solution 2
 SELECT customer_id
 FROM sales s
 GROUP BY customer_id
@@ -116,10 +146,23 @@ FROM (
 ) monthly_sales;
 
 -- 116. Find employees who earn more than the average salary across the company but less than the highest salary in their department.
+-- Solution 1
 SELECT *
 FROM employees e
 WHERE salary > (SELECT AVG(salary) FROM employees)
   AND salary < (SELECT MAX(salary) FROM employees WHERE department_id = e.department_id);
+
+-- Solution 2
+WITH max_salary_cte AS (
+	SELECT department_id, MAX(salary) AS max_salary
+	FROM employees GROUP BY department_id
+)
+SELECT e.department_id, e.id AS emp_id, e.salary, m.max_salary AS max_dept_salary, sub.avg_salary_total
+FROM employees e
+JOIN max_salary_cte m
+ON e.department_id = m.department_id
+JOIN (SELECT AVG(salary) AS avg_salary_total FROM employees) sub ON TRUE
+WHERE e.salary < m.max_salary AND e.salary > sub.avg_salary_total;
 
 -- 117. Retrieve the last 5 orders for each customer.
 SELECT *
@@ -143,9 +186,8 @@ SELECT customer_id, sale_date, amount,
 FROM sales;
 
 -- 120. Find the department-wise salary percentile (e.g., 90th percentile) using window functions.
-SELECT department_id, salary, 
-       PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY salary) OVER (PARTITION BY department_id) AS pct_90_salary 
-FROM employees;
+SELECT department_id, PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY salary) AS pct_90
+FROM employees GROUP BY department_id;
 
 -- 121. Find employees who have worked for multiple departments over time.
 SELECT employee_id
@@ -201,6 +243,7 @@ FROM (
 WHERE decile = 1;
 
 -- 128. Write a recursive query to calculate factorial of a number (e.g., 5).
+-- Solution 1
 WITH RECURSIVE factorial(n, fact) AS (
     SELECT 1, 1 
     UNION ALL
@@ -210,10 +253,32 @@ WITH RECURSIVE factorial(n, fact) AS (
 )
 SELECT fact FROM factorial WHERE n = 5;
 
+-- Solution 2
+WITH RECURSIVE factorial(n, fact) AS (
+	-- base
+	SELECT 1 AS n, 1 AS fact
+
+	UNION ALL
+
+	-- recursive
+	SELECT f.n + 1 AS n, f.fact * (f.n + 1) AS fact
+	FROM factorial f
+	WHERE f.n < 10
+)
+SELECT * FROM factorial;
+
 -- 129. Write a query to calculate the cumulative percentage of total sales per product.
+-- Solution 1
 SELECT product_id, sale_amount,
        SUM(sale_amount) OVER (ORDER BY sale_amount DESC) * 100.0 / 
        SUM(sale_amount) OVER () AS cumulative_pct 
+FROM sales;
+
+-- Solution 2
+SELECT product_id, sale_date,
+SUM(amount) OVER (PARTITION BY product_id ORDER BY sale_date) AS cum_amount,
+SUM(amount) OVER (PARTITION BY product_id) AS total_amount,
+SUM(amount) OVER (PARTITION BY product_id ORDER BY sale_date) * 100.0 / SUM(amount) OVER (PARTITION BY product_id) AS cum_pct
 FROM sales;
 
 -- 130. Find the average number of orders per customer and standard deviation.
