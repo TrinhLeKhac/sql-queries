@@ -538,3 +538,20 @@ SELECT employee_id, COUNT(*) AS consecutive_days
 FROM attendance
 GROUP BY employee_id, grp 
 HAVING COUNT(*) > 1;
+
+-- 40. Find the top 3 employees with the highest salary increase over last year.
+WITH salary_last_year AS (
+    SELECT employee_id, salary AS last_year_salary
+    FROM salaries
+    WHERE year = EXTRACT(YEAR FROM CURRENT_DATE) - 1
+),
+salary_this_year AS (
+    SELECT employee_id, salary AS this_year_salary
+    FROM salaries
+    WHERE year = EXTRACT(YEAR FROM CURRENT_DATE)
+)
+SELECT t.employee_id, t.this_year_salary - l.last_year_salary AS salary_increase
+FROM salary_this_year t
+JOIN salary_last_year l ON t.employee_id = l.employee_id
+ORDER BY salary_increase DESC
+LIMIT 3;
