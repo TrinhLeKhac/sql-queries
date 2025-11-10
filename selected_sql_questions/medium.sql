@@ -39,7 +39,6 @@ SELECT name, salary,
        CUME_DIST() OVER (ORDER BY salary) AS salary_cdf
 FROM employees;
 
-
 -- 4. Identify overlapping date ranges for bookings.
 SELECT b1.booking_id, b2.booking_id
 FROM bookings b1
@@ -412,6 +411,23 @@ SELECT d1.product_id,
        ) AS moving_median_7_days
 FROM daily_sales d1
 ORDER BY d1.product_id, d1.sale_date;
+
+-- Solution 3
+WITH sales_cte AS (
+	SELECT product_id, sale_date, SUM(amount) AS daily_sales
+	FROM sales
+	GROUP BY product_id, sale_date
+	ORDER BY product_id, sale_date
+),
+moving_median_cte AS (
+	SELECT s2.product_id, s2.sale_date,
+	PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY s1.daily_sales) AS moving_median_7_days
+	FROM sales_cte s1
+	JOIN sales_cte s2 ON s1.product_id = s2.product_id
+	WHERE s1.sale_date >= s2.sale_date - INTERVAL '6 days' AND s1.sale_date <= s2.sale_date
+	GROUP BY s2.product_id, s2.sale_date
+)
+SELECT * FROM moving_median_cte;
 
 -- 31. Write a query to generate a calendar table with all dates for the current year.
 SELECT generate_series(
