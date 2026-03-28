@@ -51,6 +51,19 @@ SELECT department_id, JSON_AGG(name) AS employee_names
 FROM employees
 GROUP BY department_id;
 
+-- Another thoughts
+SELECT
+    department_id,
+    (arr)[1] AS name_1,
+    (arr)[2] AS name_2
+FROM (
+    SELECT
+        department_id,
+        array_agg(name ORDER BY name) AS arr
+    FROM employees
+    GROUP BY department_id
+) t;
+
 -- 6. Calculate the moving average of salaries over the last 3 employees ordered by hire date.
 SELECT name, hire_date, salary,
        AVG(salary) OVER (ORDER BY hire_date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS moving_avg_salary 
@@ -136,9 +149,23 @@ JOIN (SELECT AVG(salary) AS avg_salary_total FROM employees) sub ON TRUE
 WHERE e.salary < m.max_salary AND e.salary > sub.avg_salary_total;
 
 -- 13. Write a query to get the running total of sales per customer, ordered by sale date.
-SELECT customer_id, sale_date, amount, 
+SELECT customer_id, sale_date, amount
        SUM(amount) OVER (PARTITION BY customer_id ORDER BY sale_date) AS running_total
 FROM sales;
+
+-- Cautions
+WITH sample(customer_id, sale_date, amount) as (
+	VALUES ('A', '2026-01-01', 100),
+	('A', '2026-01-01', 200),
+	('A', '2026-01-02', 300)
+)
+SELECT customer_id, sale_date, amount,
+       SUM(amount) OVER (PARTITION BY customer_id ORDER BY sale_date rows between unbounded preceding and current row) AS running_total
+FROM sample;
+
+SELECT customer_id, sale_date, amount,
+       SUM(amount) OVER (PARTITION BY customer_id ORDER BY sale_date) AS running_total
+FROM sample;
 
 -- 14. Find the department-wise salary percentile (e.g., 90th percentile) using window functions.
 SELECT department_id, PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY salary) AS pct_90
